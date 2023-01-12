@@ -1,0 +1,46 @@
+version: "3.7"
+services:
+  back-container-consumer:
+    build: .
+    restart: always
+    ports:
+      - 8083:8083
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/SdProject
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=andra
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=create
+    depends_on:
+      - postgres_container
+    links:
+      - postgres_container:database
+    networks: # Networks to join (Services on the same network can communicate with each other using their name)
+      - backend
+      - frontend
+
+  front-container:
+    build:
+      context: ../ds2022_30641_buzila_andra_assignment_1_frontend # Use an image built from the specified dockerfile in the `polling-app-client` directory.
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000" # Map the exposed port 80 on the container to port 9090 on the host machine
+    restart: always
+    depends_on:
+      - back-container-consumer
+    networks:
+      - frontend
+
+  postgres_container:
+    image: "postgres:11.4"
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: SdProject
+      POSTGRES_PASSWORD: andra
+    networks:
+      - backend
+
+networks:
+  backend:
+  frontend:
