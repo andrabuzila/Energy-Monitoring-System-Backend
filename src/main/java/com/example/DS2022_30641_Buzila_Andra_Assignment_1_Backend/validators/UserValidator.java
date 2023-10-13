@@ -12,7 +12,7 @@ public class UserValidator {
     }
 
     public boolean CheckIfUserExist(int id) {
-        User user = userRepository.findAll().stream().filter(currentUser -> currentUser.getId() == id).findFirst().get();
+        User user = userRepository.findById(id).get();
         if(user != null){
             return true;
         }

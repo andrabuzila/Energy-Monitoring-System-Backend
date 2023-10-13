@@ -6,6 +6,7 @@ import com.example.DS2022_30641_Buzila_Andra_Assignment_1_Backend.entities.Monit
 import com.example.DS2022_30641_Buzila_Andra_Assignment_1_Backend.entities.User;
 import com.example.DS2022_30641_Buzila_Andra_Assignment_1_Backend.entities.UserDevice;
 import com.example.DS2022_30641_Buzila_Andra_Assignment_1_Backend.repositories.DeviceRepository;
+import com.example.DS2022_30641_Buzila_Andra_Assignment_1_Backend.repositories.MonitoredDataRepository;
 import com.example.DS2022_30641_Buzila_Andra_Assignment_1_Backend.repositories.UserDeviceRepository;
 import com.example.DS2022_30641_Buzila_Andra_Assignment_1_Backend.repositories.UserRepository;
 import com.example.DS2022_30641_Buzila_Andra_Assignment_1_Backend.validators.UserValidator;
@@ -28,12 +29,14 @@ public class AdministratorService {
     private final UserRepository userRepository;
     private final DeviceRepository deviceRepository;
     private final UserDeviceRepository userDeviceRepository;
+    private final MonitoredDataRepository monitoredDataRepository;
 
     @Autowired
-    public AdministratorService(UserRepository userRepository, DeviceRepository deviceRepository, UserDeviceRepository userDeviceRepository) {
+    public AdministratorService(UserRepository userRepository, DeviceRepository deviceRepository, UserDeviceRepository userDeviceRepository, MonitoredDataRepository monitoredDataRepository) {
         this.userRepository = userRepository;
         this.deviceRepository = deviceRepository;
         this.userDeviceRepository = userDeviceRepository;
+        this.monitoredDataRepository = monitoredDataRepository;
     }
 
     public List<UserDTO> GetUsers () {
@@ -74,15 +77,7 @@ public class AdministratorService {
         {
             User currentUser = userRepository.findById(userId).get();
             userRepository.delete(currentUser);
-            if(!currentUser.getPassword().equals(GenerateHashedPassword(user.getPassword(), currentUser.getSalt())))
-            {
-                String newPasswordHash = GenerateHashedPassword(user.getPassword(), currentUser.getSalt());
-                currentUser.setPassword(newPasswordHash);
-            }
-            currentUser.setName(user.getName());
-            currentUser.setEmail(user.getEmail());
-            currentUser.setRole(user.getRole());
-            userRepository.save(currentUser);
+            userRepository.save(UserBuilder.UserDTOToUser(user));
         }
     }
 
@@ -130,7 +125,7 @@ public class AdministratorService {
     }
 
     public List<DeviceDTO> GetDevicesForASpecificUser (int idUser) {
-        List<Integer> userDevicesIds = userDeviceRepository.findAll().stream().filter(usrdev -> usrdev.getIdUser()==idUser).map(userdevice -> userdevice.getIdDevice()).collect(Collectors.toList());
+        List<Integer> userDevicesIds = userDeviceRepository.findAll().stream().map(userdevice -> userdevice.getIdDevice()).collect(Collectors.toList());
         List<Device> devices = deviceRepository.findAll();
         return devices.stream()
                 .map(DeviceBuilder::deviceToDeviceDTO).filter(device -> !userDevicesIds.contains(device.getId()))
@@ -140,6 +135,14 @@ public class AdministratorService {
     public int GetDeviceIdByName(String name) {
         List<Device> devices = deviceRepository.findAll();
         return devices.stream().filter(device -> device.getDescription().equals(name)).findFirst().get().getId();
+    }
+
+    public UserDTO GetCurrentUser(int idUser){
+        return UserBuilder.userToUserDTO(this.userRepository.findById(idUser).get());
+    }
+
+    public void AddMonitoredData(MonitoredDataDTO monitoredDataDTO){
+        monitoredDataRepository.save(MonitoredDataBuilder.DTOToMonitoredData(monitoredDataDTO));
     }
 
     private static String GenerateRandomSalt()

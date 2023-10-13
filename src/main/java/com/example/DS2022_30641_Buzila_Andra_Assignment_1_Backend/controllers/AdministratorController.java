@@ -1,6 +1,7 @@
 package com.example.DS2022_30641_Buzila_Andra_Assignment_1_Backend.controllers;
 
 import com.example.DS2022_30641_Buzila_Andra_Assignment_1_Backend.dtos.DeviceDTO;
+import com.example.DS2022_30641_Buzila_Andra_Assignment_1_Backend.dtos.MonitoredDataDTO;
 import com.example.DS2022_30641_Buzila_Andra_Assignment_1_Backend.dtos.UserDTO;
 import com.example.DS2022_30641_Buzila_Andra_Assignment_1_Backend.dtos.UserDeviceDTO;
 import com.example.DS2022_30641_Buzila_Andra_Assignment_1_Backend.services.AdministratorService;
@@ -88,6 +89,17 @@ public class AdministratorController {
     @GetMapping(value = "GetDeviceIdByName/{name}")
     public int getDevicesForUser(@PathVariable("name") String name){
         return administratorService.GetDeviceIdByName(name);
+    }
+
+    @GetMapping(value = "GetCurrentUser/{idUser}")
+    public UserDTO getCurrentUser(@PathVariable("idUser") int idUser) {
+        return administratorService.GetCurrentUser(idUser);
+    }
+
+    @PostMapping("AddMonitoredData")
+    public boolean insertMonitoredData(@Valid @RequestBody MonitoredDataDTO monitoredDataDTO) {
+        administratorService.AddMonitoredData(monitoredDataDTO);
+        return true;
     }
 
 }
